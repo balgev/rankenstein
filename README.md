@@ -49,9 +49,11 @@ A single CMS-ready HTML file containing:
 
 ## Requirements
 
-- **Claude Code** with the Workflow orchestration capability (this engine is a `.workflow.js` script run via the Workflow tool).
+- **Claude Cowork or Claude Code** — anything that can spawn subagents. The skill *orchestrates subagents itself* (no special workflow runtime), so it runs natively in **Cowork chat and scheduled tasks** and in Claude Code.
 - **Opus + Sonnet** access — the pipeline tiers models deliberately (Opus for angle/outline/prose; Sonnet for research/critique/validation).
 - *Optional but recommended:* a connected SEO MCP (Ahrefs, SEMrush, BrightLocal, …) for verified keyword + SERP data. Without one it degrades to web-estimated data, clearly flagged.
+
+> **Power-user extra (Claude Code only):** `skills/rankenstein/rankenstein-v2-drafting.workflow.js` is an optional deterministic variant that runs via Claude Code's Workflow tool. The `SKILL.md` is fully self-contained and does not need it — ignore it in Cowork.
 
 ## Install
 
@@ -86,19 +88,20 @@ Once installed, just ask Claude to draft a post:
 
 The skill gathers your brand context (or runs the first-run bootstrap from your URL), then runs the engine and saves a CMS-ready `.html`. See [`skills/rankenstein/SKILL.md`](skills/rankenstein/SKILL.md).
 
-### Run the engine directly
+### Optional: the deterministic workflow (Claude Code only)
 
-The engine is `skills/rankenstein/rankenstein-v2-drafting.workflow.js`, run via the Workflow tool with your brand + topic:
+For Claude Code users who have the Workflow tool, `skills/rankenstein/rankenstein-v2-drafting.workflow.js` runs the same pipeline as a deterministic JS orchestration, with your brand + topic:
 
 ```js
 {
   brand: { name, url, facts, audience, voice },
   topic: { topic, seed_keyword, intent },   // a seed keyword is enough — the engine chooses the final primary
-  target_words: null                          // null = derive from SERP competitor depth
+  target_words: null,                         // null = derive from SERP competitor depth
+  state_dir: null                             // optional: enables history/dedup
 }
 ```
 
-Or fill the `INPUT` block at the top of the script. It **fails loud** if no real brand/topic is provided — there are no silent sample-brand defaults.
+Or fill the `INPUT` block at the top of the script. It **fails loud** if no real brand/topic is provided. **You don't need this in Cowork** — the skill orchestrates the same phases via subagents.
 
 ### Brand config
 

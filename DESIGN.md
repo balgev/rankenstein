@@ -86,6 +86,17 @@ it's tenant data, not engine.
 
 ## 3. Dual-mode delivery (do NOT go pure-workflow)
 
+> **CORRECTION (2026-06-01, from a live Cowork run).** The earlier framing here — "headless
+> mode = the workflow" — was wrong for Cowork. **Cowork has no Workflow runtime, but it CAN
+> spawn subagents** (confirmed: a Cowork scheduled task ran Rankenstein by spawning
+> "keyword research" + "draft" subagents and reading the brand's tracker for history). So the
+> **primary artifact is a `SKILL.md` that orchestrates subagents itself** — it runs natively
+> in Cowork (chat *and* scheduled tasks) AND in Claude Code, since both have subagents. The
+> `.workflow.js` is **demoted to an optional Claude-Code-only "turbo"** variant (deterministic
+> JS control flow, needs the Workflow tool). One skill, subagent-orchestrated, runs everywhere;
+> the workflow is a power-user extra. The §3 skill/workflow split below still holds, just with
+> the *subagent-orchestrating skill* — not a sequential prose skill — as the universal default.
+
 A skill and a workflow are different artifacts:
 - **Skill** = `SKILL.md` prose instructions, runs in main loop, supports human checkpoints.
 - **Workflow** = JS orchestration script, deterministic fan-out of subagents, headless.

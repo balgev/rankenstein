@@ -57,13 +57,15 @@ A single CMS-ready HTML file containing:
 
 Two ways, depending on which app you use:
 
-### Claude Cowork (desktop app) — download the plugin file
+### Claude Cowork (desktop app) — upload the skill file
 
-Cowork has no command line, so you install the **whole plugin as a file**:
+Cowork has no command line. Install it through **Customize → Skills → Upload skill**:
 
-1. **Download [`rankenstein.plugin`](https://github.com/balgev/rankenstein/releases/latest)** from the latest Release.
-2. In Cowork, open **Customize** and add the plugin (select the downloaded `.plugin` file).
+1. **Download [`rankenstein.skill`](https://github.com/balgev/rankenstein/releases/latest)** (or `rankenstein.zip`) from the latest Release.
+2. In Cowork open **Customize → Skills → Upload skill** and drop the file in.
 3. Ask Claude to draft a blog post for a brand to trigger it.
+
+> The **Skills** uploader takes a `.skill` / `.zip` (with `SKILL.md` inside) — *not* a `.plugin`. (A `.plugin` file is also attached to the Release for the separate **Personal plugins** section, if you prefer that route.)
 
 ### Claude Code — use the command path
 

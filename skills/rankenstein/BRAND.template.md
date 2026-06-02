@@ -1,5 +1,5 @@
 ---
-# ─── Rankenstein v2.0 · Brand Config (declared layer) ───
+# ─── Rankenstein · Brand Config (declared layer) ───
 # Machine-read fields. The workflow parses these directly — keep them structured.
 # Fill every field. Inline comments are optional to delete once you're done.
 

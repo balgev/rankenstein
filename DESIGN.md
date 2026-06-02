@@ -1,6 +1,6 @@
-# Rankenstein v2.0 — Design Doc
+# Rankenstein — Design Doc & Build Log
 
-**Status:** Brainstorm captured, nothing built yet
+**Status:** Shipped (v2.2.x) — a subagent-orchestrated `SKILL.md` engine. This doc is the design rationale + build log, not a to-do.
 **Last updated:** 2026-06-01
 **Owner:** Gev
 
@@ -106,12 +106,13 @@ So:
 
 - **Interactive mode → the skill.** Phased, with human steering ("present the angle,
   present the outline"). Community keeps what they adopted.
-- **Headless mode (routine / Cowork schedule) → the workflow.** Human gates become
-  **critic agents** (separate fresh-context reviewers, prompted to find the problem,
-  not rubber-stamp).
+- **Headless mode (Cowork scheduled task / Claude Code unattended) → the *same* skill,
+  orchestrating subagents.** Human gates become **critic agents** (separate fresh-context
+  reviewers, prompted to find the problem, not rubber-stamp).
 
-The skill detects context and **dispatches to the workflow** when running unattended.
-One methodology, two vehicles.
+Per the §3 correction above, the shipped engine is one subagent-orchestrated `SKILL.md`
+that runs in both Cowork and Claude Code — there is no separate workflow to dispatch to.
+One methodology, one engine.
 
 ### The "present to the user" → "present to a critic agent" reframe
 In a scheduled run, the skill's human checkpoints are currently **silent no-ops**

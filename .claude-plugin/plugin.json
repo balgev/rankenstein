@@ -1,7 +1,7 @@
 {
   "name": "rankenstein",
   "description": "Research-first, brand-agnostic blog drafting engine — keyword research with SERP-ownership choice, an enforced adversarial editor, validated citations, and CMS-ready output.",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "author": {
     "name": "balgev"
   },

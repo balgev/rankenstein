@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Research-first, brand-agnostic blog drafting engine for Claude Code.",
-    "version": "2.0.0"
+    "version": "2.1.0"
   },
   "plugins": [
     {
       "name": "rankenstein",
       "source": "./",
       "description": "Research-first blog drafting: keyword research with SERP-ownership choice, an enforced adversarial editor, validated + linked citations, and CMS-ready HTML with a content brief and image prompts.",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "author": {
         "name": "balgev"
       },

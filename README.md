@@ -53,11 +53,28 @@ A single CMS-ready HTML file containing:
 - **Opus + Sonnet** access — the pipeline tiers models deliberately (Opus for angle/outline/prose; Sonnet for research/critique/validation).
 - *Optional but recommended:* a connected SEO MCP (Ahrefs, SEMrush, BrightLocal, …) for verified keyword + SERP data. Without one it degrades to web-estimated data, clearly flagged.
 
+## Install
+
+This is a Claude Code **plugin**. The repo is its own marketplace, so installation is two lines inside Claude Code:
+
+```
+/plugin marketplace add balgev/rankenstein
+/plugin install rankenstein@rankenstein
+```
+
+That registers the `rankenstein` skill across all your projects. (Prefer to do it by hand? Copy `skills/rankenstein/` into `~/.claude/skills/rankenstein/`.)
+
 ## Usage
 
-### As a workflow
+Once installed, just ask Claude to draft a post:
 
-Run `rankenstein-v2-drafting.workflow.js` via the Workflow tool, passing your brand + topic:
+> "Draft a blog post for my brand (example.com) about &lt;topic&gt;."
+
+The skill gathers your brand context (or runs the first-run bootstrap from your URL), then runs the engine and saves a CMS-ready `.html`. See [`skills/rankenstein/SKILL.md`](skills/rankenstein/SKILL.md).
+
+### Run the engine directly
+
+The engine is `skills/rankenstein/rankenstein-v2-drafting.workflow.js`, run via the Workflow tool with your brand + topic:
 
 ```js
 {
@@ -69,13 +86,9 @@ Run `rankenstein-v2-drafting.workflow.js` via the Workflow tool, passing your br
 
 Or fill the `INPUT` block at the top of the script. It **fails loud** if no real brand/topic is provided — there are no silent sample-brand defaults.
 
-### As a skill
-
-Copy this folder to `~/.claude/skills/rankenstein-v2/` and trigger it by asking to draft a blog post for a brand. See [`SKILL.md`](SKILL.md).
-
 ### Brand config
 
-Define your brand once in a `BRAND.md` (see [`BRAND.template.md`](BRAND.template.md)) — frontmatter for the machine-read fields (facets, competitors, voice hard-rules) plus prose for audience and voice. Or let the **first-run bootstrap interview** build one from your URL (see [`bootstrap-interview.md`](bootstrap-interview.md)).
+Define your brand once in a `BRAND.md` (see [`BRAND.template.md`](skills/rankenstein/BRAND.template.md)) — frontmatter for the machine-read fields (facets, competitors, voice hard-rules) plus prose for audience and voice. Or let the **first-run bootstrap interview** build one from your URL (see [`bootstrap-interview.md`](skills/rankenstein/bootstrap-interview.md)).
 
 ## What it does NOT do
 

@@ -1,0 +1,11 @@
+{
+  "name": "rankenstein",
+  "description": "Research-first, brand-agnostic blog drafting engine — keyword research with SERP-ownership choice, an enforced adversarial editor, validated citations, and CMS-ready output.",
+  "version": "2.0.0",
+  "author": {
+    "name": "balgev"
+  },
+  "license": "MIT",
+  "keywords": ["seo", "aeo", "content", "blog", "marketing", "claude-code", "llm-agents"],
+  "skills": ["./skills/rankenstein"]
+}

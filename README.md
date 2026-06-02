@@ -55,14 +55,24 @@ A single CMS-ready HTML file containing:
 
 ## Install
 
-This is a Claude Code **plugin**. The repo is its own marketplace, so installation is two lines inside Claude Code:
+### Claude Code
+
+The repo is its own plugin marketplace, so it's two lines inside Claude Code:
 
 ```
 /plugin marketplace add balgev/rankenstein
 /plugin install rankenstein@rankenstein
 ```
 
-That registers the `rankenstein` skill across all your projects. (Prefer to do it by hand? Copy `skills/rankenstein/` into `~/.claude/skills/rankenstein/`.)
+(Prefer to do it by hand? Copy `skills/rankenstein/` into `~/.claude/skills/rankenstein/`.)
+
+### Claude Cowork (desktop app)
+
+Cowork has no command line — it installs **`.plugin` files** through the UI:
+
+1. Download **`rankenstein.plugin`** from the [latest Release](https://github.com/balgev/rankenstein/releases/latest).
+2. In Cowork, open **Customize** and add/import the plugin file.
+3. Trigger it by asking Claude to draft a blog post for a brand.
 
 ## Usage
 

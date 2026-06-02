@@ -1,0 +1,95 @@
+# 🧟 Rankenstein v2.0
+
+A **research-first, brand-agnostic blog-drafting engine** that runs as a Claude Code workflow.
+
+Give it a brand and a topic. It does real keyword research (including **who owns the SERP** and whether you can realistically win it), debates the angle from four perspectives, runs an **adversarial editor on its own outline until it passes**, writes the piece, fact-checks and links every citation, and hands you CMS-ready HTML with a content brief and ready-to-generate image prompts.
+
+No hardcoded SEO vendor. No hardcoded brand. Got Ahrefs? It uses Ahrefs. SEMrush, BrightLocal, anything that returns keyword data — it discovers it by capability and uses it. Nothing connected, or a provider errors out? It falls back to web research and flags the data as estimated.
+
+---
+
+## Why it's different from "write me a blog post"
+
+Most AI blog tools fail at the same place: the jump from research to writing. They produce structurally-correct, editorially-empty content. Rankenstein forces the qualities that actually rank and get read:
+
+- **Research-first keyword choice** — not "highest volume," but the best *winnable* keyword given **who owns that SERP** and how much authority your brand has (the authority gap). A KD-30 term is a layup for a DR-80 brand and a wall for a DR-20 shop; the engine scores it relative to *you*.
+- **An adversarial editor that's actually enforced** — a critic agent stress-tests the outline against the live SERP, and the pipeline **loops back and fixes it** before a single paragraph is written. A critic you ignore is just wasted tokens.
+- **Every claim sourced and linked** — a citation gate checks that each source is authoritative, resolves (200 OK), and actually supports the *specific* claim, with correct descriptive anchor text. Named-but-unlinked = fail.
+- **Brand voice as hard rules** — banned words, tone, framing — enforced, not suggested.
+- **Provider-agnostic + graceful** — discovers any connected SEO MCP by *capability*, and falls back to web search if none is connected **or** a provider errors / returns nothing / hits quota.
+
+## How it works
+
+```
+Keyword Research  →  Angle   →  Outline   →  Draft    →  Validate
+ discover            4 lenses    write +      Opus        citations +
+ SERP ownership      → Opus      adversarial  prose,      content brief +
+ multi-factor          judge     critic,      cites its   visible image
+ choice + derived                LOOP-BACK    own         placeholders +
+ length                          until pass   sources     scorecard
+```
+
+| Phase | What it does |
+|-------|--------------|
+| **Keyword Research** | discover candidates (volume/KD/intent, PLP junk excluded) → **SERP ownership** (who dominates + their authority + content depth) → **multi-factor choice** weighing volume × difficulty × intent × AEO × **winnability**, then **derives the word target** from competitor depth |
+| **Angle** | four diverse-lens angles (contrarian / spec-led / buyer-decision / user-pain) → an Opus judge picks the ownable, clickable one |
+| **Outline** | Opus outline → adversarial Sonnet critic → **enforced loop-back** (regenerates against the critique, up to 2 passes) |
+| **Draft** | Opus prose, researches and cites its own sources with anchored links, 3 contextual images |
+| **Validate** | citation gate (authority + resolves + supports + anchored) → assembles a visible Content Brief header → output validators |
+
+## What you get
+
+A single CMS-ready HTML file containing:
+
+- a **visible Content Brief header** — article title, meta title (+ char count), meta description (+ char count), URL slug, primary + secondary keywords **with search volume**, the **SERP owner / winnability note**, and the derived word target
+- the article — semantic HTML, AEO-structured, one `<h1>`, FAQ section, JSON-LD `Article` + `FAQPage` schema
+- **3 image placeholders** as visible boxes, each carrying alt text, title, and a **ready-to-paste AI image-generation prompt** (plus a `data-image-prompt` attribute so a downstream agent can batch-generate them)
+- inline, validated citation links
+- a machine-readable result object: keyword research, SERP ownership, citation audit, and a validator scorecard
+
+## Requirements
+
+- **Claude Code** with the Workflow orchestration capability (this engine is a `.workflow.js` script run via the Workflow tool).
+- **Opus + Sonnet** access — the pipeline tiers models deliberately (Opus for angle/outline/prose; Sonnet for research/critique/validation).
+- *Optional but recommended:* a connected SEO MCP (Ahrefs, SEMrush, BrightLocal, …) for verified keyword + SERP data. Without one it degrades to web-estimated data, clearly flagged.
+
+## Usage
+
+### As a workflow
+
+Run `rankenstein-v2-drafting.workflow.js` via the Workflow tool, passing your brand + topic:
+
+```js
+{
+  brand: { name, url, facts, audience, voice },
+  topic: { topic, seed_keyword, intent },   // a seed keyword is enough — the engine chooses the final primary
+  target_words: null                          // null = derive from SERP competitor depth
+}
+```
+
+Or fill the `INPUT` block at the top of the script. It **fails loud** if no real brand/topic is provided — there are no silent sample-brand defaults.
+
+### As a skill
+
+Copy this folder to `~/.claude/skills/rankenstein-v2/` and trigger it by asking to draft a blog post for a brand. See [`SKILL.md`](SKILL.md).
+
+### Brand config
+
+Define your brand once in a `BRAND.md` (see [`BRAND.template.md`](BRAND.template.md)) — frontmatter for the machine-read fields (facets, competitors, voice hard-rules) plus prose for audience and voice. Or let the **first-run bootstrap interview** build one from your URL (see [`bootstrap-interview.md`](bootstrap-interview.md)).
+
+## What it does NOT do
+
+- **Topic discovery / dedup against your own history.** Choosing *which* topics to cover and not repeating yourself belongs to a **routine** that wraps this engine: read your content history → dedup → call Rankenstein → write the result back. This engine does keyword *research and choice*; it does not track what you've already published.
+- **Publish.** It drafts. Publishing is yours.
+
+## Cost
+
+A full run is ~17–19 model agents (~500–700k tokens) — the research and validation are real fan-outs, not single prompts. Depth over speed, on purpose.
+
+## Design & build log
+
+The full architecture, every design decision, and the findings from an independent Codex review plus multiple live validation runs are in **[DESIGN.md](DESIGN.md)**. It reads as the engineering log of how this was built and de-risked.
+
+## License
+
+[MIT](LICENSE).

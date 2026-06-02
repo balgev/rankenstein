@@ -4,12 +4,11 @@
 **Last updated:** 2026-06-01
 **Owner:** Gev
 
-> This folder is the **build/design workspace** for Rankenstein v2.0 — a
-> **brand-agnostic, reusable** skill+workflow for any tenant (Hahaha, a construction
-> company, a SaaS, etc.). It lives at `Documents/Claude/Rankenstein_v2/`, **outside any
-> brand project**, and must carry no tenant-specific content. Each tenant's filled-in
-> `BRAND.md` lives in that tenant's own project (e.g. Hahaha's is
-> `Hahaha/Hahaha AI/Rankenstein_v2/BRAND.hahaha.md`), never here.
+> This is the **build/design workspace** for Rankenstein v2.0 — a **brand-agnostic,
+> reusable** skill+workflow for any tenant (e.g. a kids-apparel brand, a construction
+> company, a SaaS). The engine carries **no tenant-specific content**. Each tenant's
+> filled-in `BRAND.md` lives in that tenant's own project (e.g.
+> `<that-brand>/BRAND.md`), never in the engine.
 
 ---
 
@@ -39,7 +38,7 @@ The whole game is drawing the line between generic engine and per-tenant data.
 |-------|-------|----------|----------|
 | **1. Rankenstein v2.0 (engine)** | pipeline, workflow orchestration, model tiering, cannibalization-firewall *mechanism*, agent-gate logic | YES — shared, versioned | "fan out citation validation", "reject if parent_topic collides", "Opus for angle" |
 | **2. Brand config (per project)** | the *inputs* the engine consumes (data, not logic) | NO — per tenant | facets/themes, competitors, voice rules, internal sources, tracker paths, notify channel |
-| **3. Scheduled trigger (per instance)** | thin trigger: cadence + which project | NO — per tenant | "Mondays 9PM, run v2.0 on the Hahaha project" |
+| **3. Scheduled trigger (per instance)** | thin trigger: cadence + which project | NO — per tenant | "Mondays 9PM, run v2.0 on the &lt;brand&gt; project" |
 
 **Discipline:** the engine hardcodes nothing brand-specific. Today's scheduled-task
 prompt hardcodes the 6 pillars, competitors (`mightlyworld.com`, `wearpact.com`,
@@ -49,8 +48,8 @@ prompt hardcodes the 6 pillars, competitors (`mightlyworld.com`, `wearpact.com`,
 Voice rules split:
 - **Generic anti-AI-tells → engine:** no em dashes, no "let's dive in", no "in
   today's fast-paced world".
-- **Brand voice → Layer 2:** "warm LA parent voice", "never say velcro", "GOTS TC
-  number", "Euphoric Colors as manufacturing partner".
+- **Brand voice → Layer 2:** tone (e.g. "warm, local, plain-spoken"), banned words, a
+  certification number to cite, how to refer to a manufacturing partner, etc.
 
 **Payoff:** ship v2.0 once, every tenant inherits the upgrade. No hand-patching N tasks.
 
@@ -79,9 +78,9 @@ drift re-confirm on site change; (2) currency — the state layer accumulates ev
 published cluster automatically, so brand memory is current by construction.
 
 **Artifacts in this folder (generic engine):** `BRAND.template.md` (documented blank),
-`bootstrap-interview.md` (the first-run flow spec). The populated Hahaha example
-(`BRAND.hahaha.md` = bootstrap output on real Hahaha data) lives in the **Hahaha
-project**, not here — it's tenant data, not engine.
+`bootstrap-interview.md` (the first-run flow spec). A tenant's populated `BRAND.md`
+(= bootstrap output for that brand) lives in **that tenant's own project**, not here —
+it's tenant data, not engine.
 
 ---
 
@@ -298,14 +297,14 @@ confidence: medium."* Keeps it honest across tenants with different tool stacks.
 In the workflow this is a cheap deterministic preflight: probe Ahrefs/GSC once, set a
 capability flag, branch which source + firewall agents get spawned.
 
-### 5.5 Candidate-pool hygiene & competitive calibration (dry-run findings, EZ Fabric 2026-06-01)
+### 5.5 Candidate-pool hygiene & competitive calibration (dry-run findings, 2026-06-01)
 
 Two rules surfaced from the first real dry run:
 
 **A. Hard-exclude PLP/SKU keywords from the BLOG candidate pool.** Keyword tools flood the
-pool with category-page (PLP) terms — colors ("green minky fabric"), size/material-variant
-modifiers, "for sale / buy / price / cheap", local ("near me", city names), and
-competitor-branded queries ("shannon minky"). These are product/collection-page targets,
+pool with category-page (PLP) terms — color/variant modifiers ("green &lt;product&gt;"),
+sizes, "for sale / buy / price / cheap", local ("near me", city names), and
+competitor-branded queries ("&lt;competitor&gt; &lt;product&gt;"). These are product/collection-page targets,
 **not blog topics**. The §1C rubric's soft "commercial fit" demotion is not enough —
 **hard-exclude** these patterns from the blog pool before scoring. They can feed PLP/SEO
 work elsewhere, never blog discovery.
@@ -317,7 +316,7 @@ work elsewhere, never blog discovery.
 > hard gate in code; let agents over-return.
 
 **A2. Intent-aware routing — blog vs the brand's OWN category page (new cannibalization
-flavor).** The POC's winner was the head term `minky fabric` (commercial/category intent).
+flavor).** The POC's winner was a head category term (commercial/category intent).
 For a *seller*, that term belongs to a **product/collection page**, and a blog pillar on it
 can cannibalize the brand's OWN PLP. The §5 firewall only checks blog-vs-blog, so it is
 blind to this. Discovery must route by intent: head commercial/PLP terms go to "PLP
@@ -327,8 +326,8 @@ low-confidence** — a web-trend agent guessed "9,500 vol" with no Ahrefs backin
 score estimates equal to verified data.
 
 **B. Competitive calibration is RELATIVE to the tenant's own authority — NOT "always go
-long-tail".** A category often has a dominant DR-heavy educator (e.g. Shannon Fabrics in
-minky). The firewall only dedups your OWN history, so it gives zero protection against
+long-tail".** A category often has a dominant DR-heavy educator (one big site that owns
+the niche's content). The firewall only dedups your OWN history, so it gives zero protection against
 walking into a giant's turf. But the fix is **not** a blanket "bias to long-tail" — that
 wrongly assumes the tenant is the underdog. A high-authority enterprise tenant can and
 should win short-tail too. Calibrate by the **gap between tenant authority and the SERP**:
@@ -464,7 +463,7 @@ decisions **govern** where they refine earlier prose. ★ = decided by Gev.
 9. **Output validators** `[build]` — HTML well-formed, JSON-LD parses, slug uniqueness vs
    tracker, DOCX conversion check, link resolution. Placeholder images: empty `src` flagged
    intentional (or an explicit placeholder block) so it doesn't break CMS/review.
-   Two validators promoted to **blocking gates** from the EZ Fabric full-draft dry run
+   Two validators promoted to **blocking gates** from a full-draft dry run
    (2026-06-01) — both defects shipped silently past a human skim:
    - **W2 — Citation/source gate (blocking).** Every factual claim must be sourced; every
      source must be legit/reliable/authoritative; every source must be a resolved `<a>`

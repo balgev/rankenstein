@@ -383,6 +383,41 @@ capabilities — so a brand-new SEO MCP works the moment it advertises the capab
 proved the mechanic: a subagent can `ToolSearch` and call whatever provider is connected,
 live (2026-06-01).
 
+### 5.7 History phase — state-aware dedup + internal-linking, baked into the engine
+
+Originally punted to the wrapping routine ("read history → dedup → call engine → write
+back"). Smarter: the engine **self-handles it when handed a place to look**, and **skips**
+it for casual one-offs.
+
+**Trigger = `state_dir`, NOT "am I scheduled?".** A workflow can't reliably sense its trigger
+context (cron vs casual), but it CAN check whether it was given a folder to persist. So
+history activates on the presence of a `state_dir` (a `BRAND.md`/input field) — which a
+scheduled task/routine naturally provides and a one-off doesn't.
+
+**3 tiers (best signal first):**
+| Given | Behavior |
+|-------|----------|
+| `state_dir` with a tracker (csv/xlsx, ANY schema) | read best-effort (title/keyword/url/intent) as the covered corpus — most precise; includes in-flight/drafted rows |
+| `state_dir`, no tracker | create the engine's own `rankenstein_history.csv`; optionally seed from the brand's sitemap / blog index (its published footprint) |
+| no `state_dir` | skip — casual one-off, no dedup |
+
+**Dedup becomes a 3-way decision, not a binary reject** — the keyword-choice agent sets
+`dedup_decision`:
+- **net-new** — uncovered → write it.
+- **refresh** — already covered, same intent → don't self-compete; surface the existing URL to update, and pick the best UNCOVERED winnable keyword instead.
+- **spoke** — covered, different intent → write it AND internally link to the existing hub page.
+
+Existing pages with URLs become **internal-link targets** for the draft agent (hub-and-spoke).
+
+**Safety:** read ANY tracker for dedup context, but only ever WRITE to the engine's own
+`rankenstein_history.csv` (append; never rewrite third-party trackers — honours the
+backup/verify discipline). Write-back logs the drafted post: date, primary_keyword, title,
+url_slug, intent, status=drafted.
+
+**What still belongs to a routine:** dedup against unpublished drafts maintained *outside*
+the engine, or cross-brand orchestration. But the common case — "don't repeat what you've
+published" — now works with **zero external setup**.
+
 ---
 
 ## 6. Caveats / constraints (read before building)

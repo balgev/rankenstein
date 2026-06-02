@@ -5,9 +5,10 @@ description: Draft a research-first, on-brand, SEO + AEO-optimized blog post for
 
 # Rankenstein v2.0 — Drafting Engine
 
-This skill drafts a single, validated, on-brand blog post from a brand + topic. It does NOT
-choose topics or dedup against a brand's published history — that is a routine's job (read
-history → dedup → call this skill → write history back).
+This skill drafts a single, validated, on-brand blog post from a brand + topic. If given a
+`state_dir`, it is **history-aware**: it dedups against the brand's prior trackers + published
+footprint and logs each draft to its own `rankenstein_history.csv`. It does NOT pick topics
+from scratch or orchestrate across many brands — that is a routine's job.
 
 ## When invoked
 
@@ -26,6 +27,9 @@ history → dedup → call this skill → write history back).
    Pass the gathered brand + topic via `args`, OR (more reliable) inline the script and fill
    its `INPUT` block. The script **fails loud** if brand/topic are missing — never let it run
    with a placeholder brand.
+   - **For history-aware runs** (recurring / scheduled), set `state_dir` to the brand's
+     project folder so the engine reads prior trackers + logs to `rankenstein_history.csv`.
+     Omit `state_dir` for a casual one-off (history is skipped).
 
 4. **Present results.** Save the returned `html` to a `.html` file. Then report:
    - the chosen **angle** and whether the **critic looped back** (`outline_passes` > 1),

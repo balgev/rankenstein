@@ -1,7 +1,8 @@
 export const meta = {
   name: 'rankenstein-v2-drafting',
-  description: 'Rankenstein v2.0 engine: proper keyword research (discover -> SERP ownership -> multi-factor choice incl. winnability) -> angle judge-panel -> outline with ENFORCED critic loop-back -> Opus prose -> citation-validation -> JS Content-Brief header + VISIBLE image placeholders (with gen prompts) + validators. Generic for any brand. Input via args OR the fillable INPUT block. Dedup-vs-history is the routine’s job, not this skill’s.',
+  description: 'Rankenstein v2.0 engine: state-aware history/dedup -> proper keyword research (discover -> SERP ownership -> multi-factor choice incl. winnability) -> angle judge-panel -> outline with ENFORCED critic loop-back -> Opus prose -> citation-validation -> JS Content-Brief header + VISIBLE image placeholders (with gen prompts) + validators. Generic for any brand. Input via args OR the fillable INPUT block. If given a state_dir it dedups against prior trackers + the brand’s published footprint and logs to its own history file; casual one-offs skip history.',
   phases: [
+    { title: 'History', detail: 'state-aware: read prior trackers / sitemap for dedup + internal links (skipped if no state_dir)' },
     { title: 'Research', detail: 'discover keywords -> SERP ownership -> multi-factor choice + derived length' },
     { title: 'Angle', detail: '4 diverse-lens generators (Sonnet) -> Opus judge' },
     { title: 'Outline', detail: 'Opus outline -> Sonnet critic -> LOOP BACK on revise (max 2)' },
@@ -15,6 +16,7 @@ const INPUT = (typeof args === 'object' && args && args.brand && args.topic) ? a
   brand: { name: '__FILL_NAME__', url: '__FILL__', facts: '__FILL__', audience: '__FILL__', voice: '__FILL__' },
   topic: { topic: '__FILL__', seed_keyword: '__FILL__', intent: 'informational' },
   target_words: null, // null = derive from SERP competitor depth
+  state_dir: null,    // optional: folder with prior trackers / where to log history. null = casual one-off (no dedup)
 }
 if (!INPUT.brand || INPUT.brand.name === '__FILL_NAME__' || !INPUT.topic || INPUT.topic.topic === '__FILL__') {
   throw new Error('rankenstein-v2-drafting: no real brand/topic provided. Pass via args or fill the INPUT block. Refusing to run with a placeholder/sample brand.')
@@ -23,6 +25,36 @@ const BRAND = INPUT.brand
 const TOPIC = INPUT.topic
 const SEED = TOPIC.seed_keyword || TOPIC.primary_keyword || TOPIC.topic
 const VOICE = `Voice: ${BRAND.voice} No em dashes. No emojis in headings. Treat ${BRAND.name} as ONE honest entry, never a hard sell.`
+
+// ============ Phase: History (state-aware dedup + internal-linking; skipped if no state_dir) ============
+phase('History')
+const STATE_DIR = INPUT.state_dir || (BRAND && BRAND.state_dir) || null
+let history = { active: false, covered: [], internal_link_targets: [], history_file: null, note: 'no state_dir — casual one-off, dedup + history skipped' }
+if (STATE_DIR) {
+  const HISTORY_SCHEMA = {
+    type: 'object', additionalProperties: false,
+    properties: {
+      tracker_files_found: { type: 'array', items: { type: 'string' } },
+      history_file: { type: 'string' },
+      created_history_file: { type: 'boolean' },
+      seeded_from_site: { type: 'boolean' },
+      covered: { type: 'array', items: { type: 'object', additionalProperties: false, properties: { title: { type: 'string' }, keyword: { type: 'string' }, url: { type: ['string', 'null'] }, intent: { type: 'string' } }, required: ['title', 'keyword'] } },
+      note: { type: 'string' },
+    },
+    required: ['tracker_files_found', 'history_file', 'created_history_file', 'seeded_from_site', 'covered', 'note'],
+  }
+  const h = await agent(
+    `Build ${BRAND.name}'s published-content history for dedup + internal linking. State dir: "${STATE_DIR}".
+1. Glob the state dir for tracker files (*.csv, *.xlsx). READ ANY found, best-effort (any schema — extract title / keyword / url / intent columns however they are named; use python for .xlsx). These are previously-covered topics. Do NOT modify these third-party trackers.
+2. Also read the engine's own "rankenstein_history.csv" in the state dir if present.
+3. If NO tracker or history file exists at all, CREATE "rankenstein_history.csv" with header "date,primary_keyword,title,url_slug,intent,status" — set created_history_file true. Optionally seed it by fetching ${BRAND.url ? BRAND.url + "'s" : 'the brand site'} sitemap.xml / blog index to list already-published URLs + titles (set seeded_from_site true if you did).
+4. Return the combined 'covered' list (title + keyword + url + intent per previously-covered piece) and the path to the writable history_file.`,
+    { label: 'history:scan', phase: 'History', schema: HISTORY_SCHEMA, model: 'sonnet' })
+  history = { active: true, covered: h.covered || [], internal_link_targets: (h.covered || []).filter((c) => c.url), history_file: h.history_file, created: h.created_history_file, seeded: h.seeded_from_site, note: h.note }
+  log(`History: ${history.covered.length} prior topics from ${STATE_DIR}${history.created ? ' (created fresh history file)' : ''}.`)
+} else {
+  log('History: no state_dir — casual run, dedup + history skipped.')
+}
 
 // ============ Phase: Keyword Research (discover -> SERP ownership -> choice) ============
 phase('Research')
@@ -67,9 +99,11 @@ const CHOICE_SCHEMA = {
     meta_title: { type: 'string' },
     derived_word_target: { type: 'integer' },
     serp_owner_note: { type: 'string' },
+    dedup_decision: { type: 'string', enum: ['net-new', 'refresh', 'spoke'] },
+    refresh_target_url: { type: ['string', 'null'] },
     rationale: { type: 'string' },
   },
-  required: ['primary_keyword', 'secondary_keywords', 'meta_title', 'derived_word_target', 'serp_owner_note', 'rationale'],
+  required: ['primary_keyword', 'secondary_keywords', 'meta_title', 'derived_word_target', 'serp_owner_note', 'dedup_decision', 'rationale'],
 }
 const choice = await agent(
   `Choose the PRIMARY keyword + 4-6 secondaries for ${BRAND.name} to target. Decide on MANY factors, not just volume:
@@ -78,6 +112,10 @@ const choice = await agent(
 - AEO / featured-snippet potential
 - WINNABILITY = can a brand of ${BRAND.name}'s authority realistically outrank whoever OWNS this SERP? (use the SERP-ownership data; do NOT pick a keyword owned by very-high-authority giants if this brand is small; a strong brand CAN take harder terms.)
 Then set derived_word_target by matching/modestly exceeding the ranking competitors' depth (clamp 1500-3500). Provide a meta_title (50-60 chars, primary kw near front) and a serp_owner_note (who owns this niche and why the pick is winnable).
+DEDUP vs ${BRAND.name}'s ALREADY-PUBLISHED content (avoid self-cannibalization). Already covered: ${JSON.stringify((history.covered || []).map((c) => ({ title: c.title, keyword: c.keyword, url: c.url, intent: c.intent })))}.
+- Prefer an UNCOVERED, winnable primary keyword. If the best keyword is already covered with the SAME intent, set dedup_decision "refresh", set refresh_target_url to that page, and pick the best UNCOVERED keyword instead of a self-competitor.
+- If covered but a DIFFERENT intent, set dedup_decision "spoke" (fine to write; it will internally link to the existing page).
+- Otherwise dedup_decision "net-new". (Empty covered list = net-new, refresh_target_url null.)
 CANDIDATES:\n${JSON.stringify(discovered.candidates, null, 2)}\nSERP OWNERSHIP:\n${JSON.stringify(serp.filter(Boolean), null, 2)}`,
   { label: 'kw:choose', phase: 'Research', schema: CHOICE_SCHEMA, model: 'opus' })
 
@@ -134,6 +172,7 @@ IMAGES — exactly 3 (one near the top, two in the body), placed contextually. E
     <div style="border:2px dashed #bbb;background:#f5f5f5;color:#555;padding:24px 20px;text-align:left;font-family:system-ui,sans-serif;line-height:1.5;">
     showing on separate lines: "IMAGE PLACEHOLDER", "Alt: <alt text>", "Title: <title>", "Image prompt: <the full generation prompt>".
   Always include alt AND title. Empty <img src=""> is NOT allowed. Every image MUST have a data-image-prompt attribute.
+INTERNAL LINKS — where genuinely relevant, link to ${BRAND.name}'s existing related pages with descriptive anchors (hub-and-spoke): ${JSON.stringify((history.internal_link_targets || []).map((c) => ({ title: c.title, url: c.url })))}.
 Include one h1, the FAQ section, and JSON-LD Article + FAQPage blocks at the end. Return html (the <article>...</article> + JSON-LD; do NOT add a brief header, that is added separately), word_count, and sources_used.`,
   { label: 'draft:prose', phase: 'Draft', schema: DRAFT_SCHEMA, model: 'opus' })
 
@@ -143,6 +182,13 @@ const CITE_SCHEMA = { type: 'object', additionalProperties: false, properties: {
 const citationAudit = await parallel((draft.sources_used || []).map((s) => () =>
   agent(`Validate (W2 gate). Claim: "${s.claim}". Source: ${s.url}. Fetch it, confirm it loads, confirm it ACTUALLY supports the SPECIFIC claim, judge authority. ${TOPIC.intent} topic; financial/legal/health claims require HIGH authority (.gov/official). verdict "pass" only if authority sufficient AND ok AND supports.`,
     { label: `cite:${(s.url.split('/')[2] || 'src')}`, phase: 'Validate', schema: CITE_SCHEMA, model: 'sonnet' })))
+
+// --- history write-back: append this run to the engine's OWN history file (never third-party trackers) ---
+if (history.active && history.history_file) {
+  await agent(
+    `Append ONE row to the CSV at "${history.history_file}" (create it with header "date,primary_keyword,title,url_slug,intent,status" if missing). Get today's date from the shell. Row: date=today, primary_keyword="${(PRIMARY || '').replace(/"/g, "'")}", title="${(outline.working_title || '').replace(/"/g, "'")}", url_slug="${outline.slug}", intent="${TOPIC.intent}", status=drafted. Use python to append safely WITHOUT rewriting existing rows. Confirm the append.`,
+    { label: 'history:write', phase: 'Validate', model: 'sonnet' })
+}
 
 // --- JS: VISIBLE Content Brief header, prepended ---
 const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -159,6 +205,7 @@ const briefHeader =
   <p style="margin:4px 0;"><strong>Secondary keywords:</strong> ${SECONDARIES.map(fmtKw).join(', ') || 'n/a'}</p>
   <p style="margin:4px 0;"><strong>SERP owner / winnability:</strong> ${esc(choice.serp_owner_note)}</p>
   <p style="margin:4px 0;"><strong>Word target (derived):</strong> ${TARGET}</p>
+  ${history.active ? `<p style="margin:4px 0;"><strong>History check:</strong> ${esc(choice.dedup_decision || 'net-new')}${choice.refresh_target_url ? ` &rarr; refresh ${esc(choice.refresh_target_url)}` : ''} <span style="color:#888;">(${history.covered.length} prior topics scanned)</span></p>` : ''}
   <p style="margin:8px 0 0;color:#888;">Keyword data: ${sourceNote}</p>
 </header>
 `
@@ -189,6 +236,7 @@ return {
   keyword_research: { source: discovered.source, provider_used: discovered.provider_used, candidates: discovered.candidates, serp_ownership: serp.filter(Boolean), choice },
   primary_keyword: PRIMARY, secondary_keywords: SECONDARIES, meta_title: choice.meta_title,
   chosenAngle, outline_passes: pass, final_critic_verdict: critique.verdict, final_outline: outline,
+  history: { active: history.active, covered_count: (history.covered || []).length, history_file: history.history_file, dedup_decision: choice.dedup_decision, refresh_target_url: choice.refresh_target_url, internal_link_targets: history.internal_link_targets, note: history.note },
   sources_used: draft.sources_used, citationAudit: citationAudit.filter(Boolean),
   validators, html: finalHtml,
 }

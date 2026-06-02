@@ -90,9 +90,13 @@ Or fill the `INPUT` block at the top of the script. It **fails loud** if no real
 
 Define your brand once in a `BRAND.md` (see [`BRAND.template.md`](skills/rankenstein/BRAND.template.md)) — frontmatter for the machine-read fields (facets, competitors, voice hard-rules) plus prose for audience and voice. Or let the **first-run bootstrap interview** build one from your URL (see [`bootstrap-interview.md`](skills/rankenstein/bootstrap-interview.md)).
 
+## History-aware (no tracker required)
+
+Point it at a `state_dir` (your brand's project folder) and the **History phase** kicks in: it reads any existing trackers (CSV/XLSX, any schema) and/or self-discovers your published footprint from your sitemap, then **dedups against it** — turning each candidate into a `net-new`, `refresh` (you already own it → update instead), or `spoke` (write it + internally link to your existing page) decision. It logs each draft to its own `rankenstein_history.csv` and never rewrites your trackers. No `state_dir` (a casual one-off)? It skips all of that. Zero setup for the common case.
+
 ## What it does NOT do
 
-- **Topic discovery / dedup against your own history.** Choosing *which* topics to cover and not repeating yourself belongs to a **routine** that wraps this engine: read your content history → dedup → call Rankenstein → write the result back. This engine does keyword *research and choice*; it does not track what you've already published.
+- **Topic discovery & cross-brand orchestration.** It researches and chooses the *keyword* for a given topic, but a **routine** still adds value if you want it to pick topics from scratch, dedup against *unpublished/in-flight* drafts held outside the engine, or run across many brands on a schedule.
 - **Publish.** It drafts. Publishing is yours.
 
 ## Cost

@@ -55,24 +55,26 @@ A single CMS-ready HTML file containing:
 
 ## Install
 
-### Claude Code
+Two ways, depending on which app you use:
 
-The repo is its own plugin marketplace, so it's two lines inside Claude Code:
+### Claude Cowork (desktop app) — download the plugin file
+
+Cowork has no command line, so you install the **whole plugin as a file**:
+
+1. **Download [`rankenstein.plugin`](https://github.com/balgev/rankenstein/releases/latest)** from the latest Release.
+2. In Cowork, open **Customize** and add the plugin (select the downloaded `.plugin` file).
+3. Ask Claude to draft a blog post for a brand to trigger it.
+
+### Claude Code — use the command path
+
+The repo is its own plugin marketplace, so it's two lines in the Claude Code terminal:
 
 ```
 /plugin marketplace add balgev/rankenstein
 /plugin install rankenstein@rankenstein
 ```
 
-(Prefer to do it by hand? Copy `skills/rankenstein/` into `~/.claude/skills/rankenstein/`.)
-
-### Claude Cowork (desktop app)
-
-Cowork has no command line — it installs **`.plugin` files** through the UI:
-
-1. Download **`rankenstein.plugin`** from the [latest Release](https://github.com/balgev/rankenstein/releases/latest).
-2. In Cowork, open **Customize** and add/import the plugin file.
-3. Trigger it by asking Claude to draft a blog post for a brand.
+(Or by hand: copy `skills/rankenstein/` into `~/.claude/skills/rankenstein/`.)
 
 ## Usage
 
